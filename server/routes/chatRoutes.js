@@ -1,6 +1,10 @@
 import express from "express";
+
 import dotenv from "dotenv";
+
 import Groq from "groq-sdk";
+
+import { getPdfText } from "../pdfStore.js";
 
 dotenv.config();
 
@@ -16,18 +20,43 @@ router.post("/", async (req, res) => {
 
     const { message } = req.body;
 
-    const completion = await groq.chat.completions.create({
-      messages: [
-        {
-          role: "user",
-          content: message,
-        },
-      ],
-     model: "llama-3.3-70b-versatile",
-    });
+    const pdfContext = getPdfText();
+
+if (!pdfContext) {
+
+  return res.json({
+    reply: "Please upload a PDF first.",
+  });
+}
+
+    const finalPrompt = `
+You are an AI study assistant.
+
+Use the following PDF content to answer the user's question.
+
+PDF CONTENT:
+${pdfContext}
+
+USER QUESTION:
+${message}
+`;
+
+    const completion =
+      await groq.chat.completions.create({
+
+        messages: [
+          {
+            role: "user",
+            content: finalPrompt,
+          },
+        ],
+
+        model: "llama-3.3-70b-versatile",
+      });
 
     const reply =
-      completion.choices[0]?.message?.content || "No response";
+      completion.choices[0]?.message?.content ||
+      "No response";
 
     res.json({
       reply,

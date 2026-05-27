@@ -1,6 +1,17 @@
+import { useEffect, useRef } from "react";
+
 import MessageBubble from "./MessageBubble";
 import LoadingDots from "./LoadingDots";
-function ChatWindow({ messages, loading  }) {
+
+function ChatWindow({ messages, loading }) {
+
+  const bottomRef = useRef(null);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({
+      behavior: "smooth",
+    });
+  }, [messages, loading]);
 
   return (
     <div className="flex-1 overflow-y-auto px-4 py-6">
@@ -9,11 +20,13 @@ function ChatWindow({ messages, loading  }) {
 
         <div className="h-full flex flex-col items-center justify-center">
 
+          {/* Heading */}
           <h1 className="text-5xl font-bold mb-4 text-center bg-linear-to-r from-purple-400 via-violet-500 to-fuchsia-500 bg-clip-text text-transparent">
             How can I help you today?
           </h1>
 
-          <p className="text-gray-400">
+          {/* Subtitle */}
+          <p className="text-gray-400 text-center">
             Ask coding doubts, upload PDFs, and learn smarter with AI.
           </p>
 
@@ -21,15 +34,20 @@ function ChatWindow({ messages, loading  }) {
 
       ) : (
 
-       <div className="max-w-4xl mx-auto space-y-4">
+        <div className="max-w-4xl mx-auto space-y-4">
 
-  {messages.map((msg, index) => (
-    <MessageBubble key={index} message={msg} />
-  ))}
+          {messages.map((msg, index) => (
+            <MessageBubble
+              key={index}
+              message={msg}
+            />
+          ))}
 
-  {loading && <LoadingDots />}
+          {loading && <LoadingDots />}
 
-</div>
+          <div ref={bottomRef}></div>
+
+        </div>
 
       )}
 
