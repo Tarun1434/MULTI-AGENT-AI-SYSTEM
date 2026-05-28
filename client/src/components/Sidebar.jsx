@@ -1,30 +1,76 @@
-function Sidebar() {
+function Sidebar({
+  chatSessions = [],
+  currentChatIndex = 0,
+  setCurrentChatIndex,
+  createNewChat,
+}) {
+
   return (
-    <div className="w-64 bg-[#171717] border-r border-gray-800 p-4 hidden md:flex flex-col">
+    <div className="w-64 bg-[#111111] border-r border-gray-800 flex flex-col h-screen">
 
-      {/* Logo */}
-      <h1 className="text-2xl font-bold mb-6 bg-linear-to-r from-purple-400 to-violet-600 bg-clip-text text-transparent">
-        AI Assistant
-      </h1>
+      {/* LOGO */}
+      <div className="p-5 border-b border-gray-800">
 
-      {/* New Chat Button */}
-      <button className="bg-linear-to-r from-purple-600 to-violet-500 hover:opacity-90 transition rounded-xl p-3 text-left font-medium mb-6">
-        + New Chat
-      </button>
+        <h1 className="text-2xl font-bold bg-linear-to-r from-purple-400 to-violet-600 bg-clip-text text-transparent">
+          AI Assistant
+        </h1>
 
-      {/* Recent Chats */}
-      <div className="text-gray-400 text-sm mb-3">
-        Recent Chats
       </div>
 
-      <div className="space-y-2">
-        <div className="bg-[#1e1e1e] p-3 rounded-lg hover:bg-[#2a2a2a] cursor-pointer">
-          Java OOPS
+      {/* CONTENT */}
+      <div className="flex-1 overflow-y-auto p-4">
+
+        {/* NEW CHAT BUTTON */}
+        <button
+          onClick={createNewChat}
+          className="w-full bg-linear-to-r from-purple-600 to-violet-500 py-3 rounded-xl hover:opacity-90 transition mb-5"
+        >
+          + New Chat
+        </button>
+
+        {/* CHAT LIST */}
+        <div className="space-y-2">
+
+          {chatSessions.length > 0 ? (
+
+            chatSessions.map((chat, index) => (
+
+              <button
+                key={index}
+                onClick={() =>
+                  setCurrentChatIndex(index)
+                }
+                className={`w-full text-left px-4 py-3 rounded-xl text-sm truncate transition
+                ${
+                  currentChatIndex === index
+                    ? "bg-purple-600 text-white"
+                    : "bg-[#1a1a1a] text-gray-300 hover:bg-[#222222]"
+                }`}
+              >
+                {chat.title || "New Chat"}
+              </button>
+
+            ))
+
+          ) : (
+
+            <p className="text-gray-500 text-sm">
+              No chats yet
+            </p>
+
+          )}
+
         </div>
 
-        <div className="bg-[#1e1e1e] p-3 rounded-lg hover:bg-[#2a2a2a] cursor-pointer">
-          MERN Stack
-        </div>
+      </div>
+
+      {/* FOOTER */}
+      <div className="p-4 border-t border-gray-800">
+
+        <p className="text-xs text-gray-500 text-center">
+          Powered by Groq AI
+        </p>
+
       </div>
 
     </div>

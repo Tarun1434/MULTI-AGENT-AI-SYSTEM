@@ -4,7 +4,9 @@ import dotenv from "dotenv";
 
 import Groq from "groq-sdk";
 
-import { getPdfText } from "../pdfStore.js";
+import natural from "natural";
+
+import { getChunks } from "../chunkStore.js";
 
 dotenv.config();
 
@@ -20,27 +22,95 @@ router.post("/", async (req, res) => {
 
     const { message } = req.body;
 
-    const pdfContext = getPdfText();
+    const chunks = getChunks();
 
-if (!pdfContext) {
+    let finalPrompt = "";
 
-  return res.json({
-    reply: "Please upload a PDF first.",
-  });
-}
+    // =========================================
+    // IF PDF EXISTS
+    // =========================================
+    if (chunks.length) {
 
-    const finalPrompt = `
-You are an AI study assistant.
+      // SIMILARITY SEARCH
+      const scoredChunks = chunks.map((chunk) => {
 
-Use the following PDF content to answer the user's question.
+        const score =
+          natural.JaroWinklerDistance(
+            message.toLowerCase(),
+            chunk.toLowerCase()
+          );
 
-PDF CONTENT:
-${pdfContext}
+        return {
+          chunk,
+          score,
+        };
+      });
 
-USER QUESTION:
+      // SORT BEST MATCHES
+      scoredChunks.sort(
+        (a, b) => b.score - a.score
+      );
+
+      // TOP 3 CHUNKS
+      const topChunks = scoredChunks
+        .slice(0, 3)
+        .map((item) => item.chunk)
+        .join("\n");
+
+      // BEST SCORE
+      const bestScore =
+        scoredChunks[0].score;
+
+      // =========================================
+      // DOCUMENT CHAT MODE
+      // =========================================
+      if (bestScore > 0.75) {
+
+        finalPrompt = `
+You are an AI Study Assistant.
+
+Answer using the document context.
+
+DOCUMENT CONTEXT:
+${topChunks}
+
+QUESTION:
 ${message}
 `;
 
+      }
+
+      // =========================================
+      // NORMAL AI MODE
+      // =========================================
+      else {
+
+        finalPrompt = `
+You are a helpful AI assistant.
+
+QUESTION:
+${message}
+`;
+      }
+
+    }
+
+    // =========================================
+    // NO PDF UPLOADED
+    // =========================================
+    else {
+
+      finalPrompt = `
+You are a helpful AI assistant.
+
+QUESTION:
+${message}
+`;
+    }
+
+    // =========================================
+    // STREAMING RESPONSE
+    // =========================================
     const completion =
       await groq.chat.completions.create({
 
@@ -52,15 +122,27 @@ ${message}
         ],
 
         model: "llama-3.3-70b-versatile",
+
+        stream: true,
       });
 
-    const reply =
-      completion.choices[0]?.message?.content ||
-      "No response";
+    // RESPONSE HEADER
+    res.setHeader(
+      "Content-Type",
+      "text/plain"
+    );
 
-    res.json({
-      reply,
-    });
+    // STREAM TOKENS
+    for await (const chunk of completion) {
+
+      const content =
+        chunk.choices[0]?.delta?.content || "";
+
+      res.write(content);
+    }
+
+    // END RESPONSE
+    res.end();
 
   } catch (error) {
 

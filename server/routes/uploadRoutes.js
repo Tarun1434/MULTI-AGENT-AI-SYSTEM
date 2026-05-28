@@ -6,7 +6,7 @@ import fs from "fs";
 
 import pdfParse from "pdf-parse";
 
-import { setPdfText } from "../pdfStore.js";
+import { setChunks } from "../chunkStore.js";
 
 const router = express.Router();
 
@@ -38,18 +38,26 @@ router.post(
 
       const pdfData = await pdfParse(dataBuffer);
 
-      
+      const text = pdfData.text;
 
-      const cleanedText = pdfData.text.trim();
+      // CHUNKING
+      const chunkSize = 500;
 
-setPdfText(cleanedText);
+      let textChunks = [];
 
-console.log(cleanedText.slice(0, 500));
+      for (let i = 0; i < text.length; i += chunkSize) {
 
-      console.log("PDF Stored Successfully");
+        textChunks.push(
+          text.slice(i, i + chunkSize)
+        );
+      }
+
+      setChunks(textChunks);
+
+      console.log("Chunks Stored:", textChunks.length);
 
       res.json({
-        message: "PDF uploaded successfully",
+        message: "PDF uploaded and chunked successfully",
       });
 
     } catch (error) {
