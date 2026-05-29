@@ -44,7 +44,7 @@ function InputBox({ onSend }) {
     try {
 
     const response =   await axios.post(
-        "http://localhost:5000/upload",
+        "https://multi-agent-ai-system-41nv.onrender.com/upload",
         formData
       );
       console.log(response.data);

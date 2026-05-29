@@ -116,7 +116,7 @@ const [loading, setLoading] =
     try {
 
       const response = await fetch(
-        "http://localhost:5000/chat",
+        "https://multi-agent-ai-system-41nv.onrender.com/chat",
         {
           method: "POST",
 
