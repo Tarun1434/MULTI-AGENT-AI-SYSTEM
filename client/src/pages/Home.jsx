@@ -16,13 +16,25 @@ function Home() {
 
   const [loading, setLoading] =
     useState(false);
+const [isLoggedIn, setIsLoggedIn] =
+  useState(null);
 
-  const [isLoggedIn, setIsLoggedIn] =
-    useState(
-      localStorage.getItem("isLoggedIn")
-      === "true"
+useEffect(() => {
+
+  const loginStatus =
+    localStorage.getItem(
+      "isLoggedIn"
     );
 
+  setIsLoggedIn(
+    loginStatus === "true"
+  );
+
+}, []);
+
+if (isLoggedIn === null) {
+  return null;
+}
   // =========================================
   // LOAD SAVED CHATS
   // =========================================
