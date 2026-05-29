@@ -5,9 +5,9 @@ import Sidebar from "../components/Sidebar";
 import ChatWindow from "../components/ChatWindow";
 import InputBox from "../components/InputBox";
 import LoginModal from "../components/LoginModal";
-
+import axios from "axios";
 function Home() {
-
+const [fileName, setFileName] = useState("");
 const [chatSessions, setChatSessions] =
   useState([]);
 
@@ -19,6 +19,7 @@ const [loading, setLoading] =
 
   const [sidebarOpen, setSidebarOpen] =
   useState(false);
+
 // =========================================
   // LOAD SAVED CHATS
   // =========================================
@@ -214,14 +215,25 @@ const [loading, setLoading] =
   // =========================================
   // CREATE NEW CHAT
   // =========================================
- const createNewChat = () => {
+
+
+const createNewChat = async () => {
+
+  try {
+
+    await axios.post(
+      "https://multi-agent-ai-system-41nv.onrender.com/clear-pdf"
+    );
+      setFileName("");
+  } catch (error) {
+
+    console.log(error);
+  }
 
   const currentChat =
     chatSessions[currentChatIndex];
 
-  // If current chat is empty,
-  // don't create another empty chat
-
+  // Don't create multiple empty chats
   if (
     currentChat &&
     currentChat.messages.length === 0
@@ -347,8 +359,10 @@ const [loading, setLoading] =
       />
 
       <InputBox
-        onSend={handleSend}
-      />
+  onSend={handleSend}
+  fileName={fileName}
+  setFileName={setFileName}
+/>
 
     </div>
 

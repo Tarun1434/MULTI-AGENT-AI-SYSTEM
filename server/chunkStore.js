@@ -16,3 +16,7 @@ export const setVectorStore = (store) => {
 export const getVectorStore = () => {
   return vectorStore;
 };
+export const clearPdfData = () => {
+  chunks = [];
+  vectorStore = null;
+};

@@ -1,14 +1,11 @@
 import { useState } from "react";
-import { FiPaperclip, FiSend } from "react-icons/fi";
+import { FiPaperclip, FiSend, FiX } from "react-icons/fi";
 import axios from "axios";
 
-function InputBox({ onSend }) {
+function InputBox({ onSend ,fileName, setFileName, }) {
 
-  const [input, setInput] =
-    useState("");
-
-  const [fileName, setFileName] =
-    useState("");
+  const [input, setInput] = useState("");
+ 
 
   const handleSubmit = () => {
 
@@ -21,66 +18,85 @@ function InputBox({ onSend }) {
 
   const handleKeyDown = (e) => {
 
-    if (
-      e.key === "Enter" &&
-      !e.shiftKey
-    ) {
+    if (e.key === "Enter" && !e.shiftKey) {
 
-       return ;
+      e.preventDefault();
+
+      handleSubmit();
     }
   };
 
-  const handleFileUpload =
-    async (e) => {
+ const handleRemovePdf = async () => {
 
-      const file =
-        e.target.files[0];
+  console.log("❌ DELETE CLICKED");
 
-      if (!file) return;
+  try {
 
-      setFileName(file.name);
-
-      const formData =
-        new FormData();
-
-      formData.append(
-        "pdf",
-        file
+    const response =
+      await axios.post(
+        "https://multi-agent-ai-system-41nv.onrender.com/clear-pdf"
       );
 
-      try {
+    console.log(response.data);
 
-        const response =
-          await axios.post(
-            "https://multi-agent-ai-system-41nv.onrender.com/upload",
-            formData
-          );
+    setFileName("");
 
-        console.log(
-          response.data
-        );
+  } catch (error) {
 
-      } catch (error) {
+    console.log(error);
+  }
+};
 
-        console.log(
-          error.response?.data ||
-          error
-        );
-      }
-    };
+  const handleFileUpload = async (e) => {
+
+    const file = e.target.files[0];
+
+    if (!file) return;
+
+    setFileName(file.name);
+
+    const formData = new FormData();
+
+    formData.append("pdf", file);
+
+    try {
+
+      const response = await axios.post(
+        "https://multi-agent-ai-system-41nv.onrender.com/upload",
+        formData
+      );
+
+      console.log(response.data);
+
+    } catch (error) {
+
+      console.log(
+        error.response?.data || error
+      );
+    }
+  };
 
   return (
 
     <div className="border-t border-gray-800 bg-[#0f0f0f] px-3 md:px-6 py-3">
 
-      {/* Uploaded File */}
+      {/* Uploaded PDF */}
       {fileName && (
 
-        <div className="max-w-5xl mx-auto mb-2">
+        <div className="max-w-5xl mx-auto mb-3">
 
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-400 text-xs md:text-sm">
+          <div className="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-400 text-xs md:text-sm">
 
-            📄 {fileName}
+            <span className="truncate max-w-[200px] md:max-w-[400px]">
+              📄 {fileName}
+            </span>
+
+            <button
+              onClick={handleRemovePdf}
+              className="text-red-400 hover:text-red-300 transition"
+            >
+              <FiX size={16} />
+            </button>
 
           </div>
 
@@ -101,9 +117,7 @@ function InputBox({ onSend }) {
               type="file"
               accept=".pdf"
               hidden
-              onChange={
-                handleFileUpload
-              }
+              onChange={handleFileUpload}
             />
 
           </label>
@@ -114,22 +128,16 @@ function InputBox({ onSend }) {
             value={input}
             placeholder="Message AI Study Assistant..."
             onChange={(e) =>
-              setInput(
-                e.target.value
-              )
+              setInput(e.target.value)
             }
-          
+            onKeyDown={handleKeyDown}
             className="flex-1 bg-transparent text-white placeholder-gray-500 resize-none outline-none max-h-40 overflow-y-auto"
           />
 
           {/* Send */}
           <button
-            onClick={
-              handleSubmit
-            }
-            disabled={
-              !input.trim()
-            }
+            onClick={handleSubmit}
+            disabled={!input.trim()}
             className="w-10 h-10 rounded-full bg-linear-to-r from-purple-600 to-violet-500 flex items-center justify-center hover:scale-105 transition disabled:opacity-50 disabled:hover:scale-100"
           >
 
@@ -138,9 +146,6 @@ function InputBox({ onSend }) {
           </button>
 
         </div>
-
-   
-       
 
       </div>
 

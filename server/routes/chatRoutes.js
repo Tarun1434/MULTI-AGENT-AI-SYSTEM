@@ -1,12 +1,8 @@
 import express from "express";
-
 import dotenv from "dotenv";
-
 import Groq from "groq-sdk";
 
-import natural from "natural";
-
-import { getChunks } from "../chunkStore.js";
+import { getVectorStore } from "../chunkStore.js";
 
 dotenv.config();
 
@@ -17,87 +13,64 @@ const groq = new Groq({
 });
 
 router.post("/", async (req, res) => {
-
+   console.log("🔥 CHAT ROUTE HIT 🔥");
   try {
-
     const { message } = req.body;
-
-    const chunks = getChunks();
 
     let finalPrompt = "";
 
-    // =========================================
-    // IF PDF EXISTS
-    // =========================================
-    if (chunks.length) {
+    // ============================
+    // GET VECTOR STORE
+    // ============================
 
-      // SIMILARITY SEARCH
-      const scoredChunks = chunks.map((chunk) => {
+    const vectorStore = getVectorStore();
 
-        const score =
-          natural.JaroWinklerDistance(
-            message.toLowerCase(),
-            chunk.toLowerCase()
-          );
+    console.log(
+      "VectorStore:",
+      !!vectorStore
+    );
 
-        return {
-          chunk,
-          score,
-        };
-      });
+    // ============================
+    // PDF EXISTS
+    // ============================
 
-      // SORT BEST MATCHES
-      scoredChunks.sort(
-        (a, b) => b.score - a.score
-      );
+    if (vectorStore) {
 
-      // TOP 3 CHUNKS
-      const topChunks = scoredChunks
-        .slice(0, 3)
-        .map((item) => item.chunk)
-        .join("\n");
+      const results =
+        await vectorStore.similaritySearch(
+          message,
+          15
+        );
 
-      // BEST SCORE
-      const bestScore =
-        scoredChunks[0].score;
+      const topChunks =
+        results
+          .map(
+            (doc) =>
+              doc.pageContent
+          )
+          .join("\n\n");
 
-      // =========================================
-      // DOCUMENT CHAT MODE
-      // =========================================
-      if (bestScore > 0.75) {
-
-        finalPrompt = `
+      finalPrompt = `
 You are an AI Study Assistant.
 
-Answer using the document context.
+Answer ONLY using the document context below.
 
 DOCUMENT CONTEXT:
 ${topChunks}
 
 QUESTION:
 ${message}
+
+If the answer is not present in the document, say:
+"The answer was not found in the uploaded PDF."
 `;
-
-      }
-
-      // =========================================
-      // NORMAL AI MODE
-      // =========================================
-      else {
-
-        finalPrompt = `
-You are a helpful AI assistant.
-
-QUESTION:
-${message}
-`;
-      }
 
     }
 
-    // =========================================
-    // NO PDF UPLOADED
-    // =========================================
+    // ============================
+    // NORMAL CHAT MODE
+    // ============================
+
     else {
 
       finalPrompt = `
@@ -108,9 +81,10 @@ ${message}
 `;
     }
 
-    // =========================================
-    // STREAMING RESPONSE
-    // =========================================
+    // ============================
+    // GROQ STREAMING
+    // ============================
+
     const completion =
       await groq.chat.completions.create({
 
@@ -121,27 +95,26 @@ ${message}
           },
         ],
 
-        model: "llama-3.3-70b-versatile",
+        model:
+          "llama-3.3-70b-versatile",
 
         stream: true,
       });
 
-    // RESPONSE HEADER
     res.setHeader(
       "Content-Type",
       "text/plain"
     );
 
-    // STREAM TOKENS
     for await (const chunk of completion) {
 
       const content =
-        chunk.choices[0]?.delta?.content || "";
+        chunk.choices[0]?.delta
+          ?.content || "";
 
       res.write(content);
     }
 
-    // END RESPONSE
     res.end();
 
   } catch (error) {
@@ -149,7 +122,8 @@ ${message}
     console.log(error);
 
     res.status(500).json({
-      error: "Something went wrong",
+      error:
+        "Something went wrong",
     });
   }
 });

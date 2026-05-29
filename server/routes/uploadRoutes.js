@@ -1,63 +1,128 @@
 import express from "express";
-
 import multer from "multer";
-
 import fs from "fs";
-
 import pdfParse from "pdf-parse";
 
-import { setChunks } from "../chunkStore.js";
+import { RecursiveCharacterTextSplitter }
+from "@langchain/textsplitters";
+
+import {
+  setChunks,
+  setVectorStore,
+} from "../chunkStore.js";
+
+import { createVectorStore }
+from "../rag/vectorStore.js";
 
 const router = express.Router();
 
 const storage = multer.diskStorage({
 
-  destination: function (req, file, cb) {
+  destination: function (
+    req,
+    file,
+    cb
+  ) {
 
     cb(null, "uploads/");
   },
 
-  filename: function (req, file, cb) {
+  filename: function (
+    req,
+    file,
+    cb
+  ) {
 
-    cb(null, Date.now() + "-" + file.originalname);
+    cb(
+      null,
+      Date.now() +
+        "-" +
+        file.originalname
+    );
   },
 });
 
-const upload = multer({ storage });
+const upload =
+  multer({ storage });
 
 router.post(
   "/",
   upload.single("pdf"),
   async (req, res) => {
-
+console.log("NEW RAG ROUTE RUNNING");
     try {
 
-      const pdfPath = req.file.path;
+      const pdfPath =
+        req.file.path;
 
-      const dataBuffer = fs.readFileSync(pdfPath);
-
-      const pdfData = await pdfParse(dataBuffer);
-
-      const text = pdfData.text;
-
-      // CHUNKING
-      const chunkSize = 500;
-
-      let textChunks = [];
-
-      for (let i = 0; i < text.length; i += chunkSize) {
-
-        textChunks.push(
-          text.slice(i, i + chunkSize)
+      const dataBuffer =
+        fs.readFileSync(
+          pdfPath
         );
-      }
 
-      setChunks(textChunks);
+      const pdfData =
+        await pdfParse(
+          dataBuffer
+        );
 
-      console.log("Chunks Stored:", textChunks.length);
+      const text =
+        pdfData.text;
+
+      // =====================
+      // LANGCHAIN CHUNKING
+      // =====================
+
+      const splitter =
+        new RecursiveCharacterTextSplitter({
+          chunkSize: 500,
+          chunkOverlap: 100,
+        });
+
+      const docs =
+        await splitter.createDocuments([
+          text,
+        ]);
+
+      const textChunks =
+        docs.map(
+          (doc) =>
+            doc.pageContent
+        );
+
+      // Save chunks
+      setChunks(
+        textChunks
+      );
+
+      console.log(
+        "Chunks Stored:",
+        textChunks.length
+      );
+
+
+      // =====================
+      // VECTOR STORE
+      // =====================
+
+      const vectorStore =
+        await createVectorStore(
+          textChunks
+        );
+
+      setVectorStore(
+        vectorStore
+      );
+
+      console.log(
+        "Vector Store Ready"
+      );
 
       res.json({
-        message: "PDF uploaded and chunked successfully",
+        success: true,
+        message:
+          "RAG_TEST_999",
+        chunks:
+          textChunks.length,
       });
 
     } catch (error) {
@@ -65,9 +130,13 @@ router.post(
       console.log(error);
 
       res.status(500).json({
-        error: "PDF processing failed",
+        success: false,
+        error:
+          "PDF processing failed",
       });
     }
+
+    console.log("RAG Upload Route Running...");
   }
 );
 
