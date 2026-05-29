@@ -1,14 +1,14 @@
 import { useState } from "react";
-
-import { FiPaperclip } from "react-icons/fi";
-
+import { FiPaperclip, FiSend } from "react-icons/fi";
 import axios from "axios";
 
 function InputBox({ onSend }) {
 
-  const [input, setInput] = useState("");
+  const [input, setInput] =
+    useState("");
 
-  const [fileName, setFileName] = useState("");
+  const [fileName, setFileName] =
+    useState("");
 
   const handleSubmit = () => {
 
@@ -21,7 +21,10 @@ function InputBox({ onSend }) {
 
   const handleKeyDown = (e) => {
 
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (
+      e.key === "Enter" &&
+      !e.shiftKey
+    ) {
 
       e.preventDefault();
 
@@ -29,49 +32,70 @@ function InputBox({ onSend }) {
     }
   };
 
-  const handleFileUpload = async (e) => {
+  const handleFileUpload =
+    async (e) => {
 
-    const file = e.target.files[0];
+      const file =
+        e.target.files[0];
 
-    if (!file) return;
+      if (!file) return;
 
-    setFileName(file.name);
+      setFileName(file.name);
 
-    const formData = new FormData();
+      const formData =
+        new FormData();
 
-    formData.append("pdf", file);
-
-    try {
-
-    const response =   await axios.post(
-        "https://multi-agent-ai-system-41nv.onrender.com/upload",
-        formData
+      formData.append(
+        "pdf",
+        file
       );
-      console.log(response.data);
-      console.log("PDF Uploaded");
 
-    } catch (error) {
-         
-       console.log(error.response?.data || error);
-    }
-  };
+      try {
+
+        const response =
+          await axios.post(
+            "https://multi-agent-ai-system-41nv.onrender.com/upload",
+            formData
+          );
+
+        console.log(
+          response.data
+        );
+
+      } catch (error) {
+
+        console.log(
+          error.response?.data ||
+          error
+        );
+      }
+    };
 
   return (
-    <div className="p-4 border-t border-gray-800">
 
-      {/* File Name */}
+    <div className="border-t border-gray-800 bg-[#0f0f0f] px-3 md:px-6 py-3">
+
+      {/* Uploaded File */}
       {fileName && (
-        <div className="max-w-4xl mx-auto text-sm text-purple-400 mb-2">
-          Uploaded: {fileName}
+
+        <div className="max-w-5xl mx-auto mb-2">
+
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-400 text-xs md:text-sm">
+
+            📄 {fileName}
+
+          </div>
+
         </div>
+
       )}
 
-      <div className="max-w-4xl mx-auto bg-[#1e1e1e] border border-gray-800 rounded-2xl px-4 py-3 shadow-[0_0_30px_rgba(168,85,247,0.15)]">
+      <div className="max-w-5xl mx-auto">
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-end gap-2 bg-[#171717] border border-gray-800 rounded-3xl px-3 py-3 shadow-lg">
 
-          {/* Upload Button */}
-          <label className="cursor-pointer text-gray-400 hover:text-white transition">
+          {/* Upload */}
+          <label className="cursor-pointer text-gray-400 hover:text-white transition mb-2">
 
             <FiPaperclip size={22} />
 
@@ -79,7 +103,9 @@ function InputBox({ onSend }) {
               type="file"
               accept=".pdf"
               hidden
-              onChange={handleFileUpload}
+              onChange={
+                handleFileUpload
+              }
             />
 
           </label>
@@ -87,26 +113,42 @@ function InputBox({ onSend }) {
           {/* Input */}
           <textarea
             rows="1"
-            placeholder="Message AI Study Assistant..."
             value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className="flex-1 bg-transparent outline-none text-white placeholder-gray-500 resize-none"
+            placeholder="Message AI Study Assistant..."
+            onChange={(e) =>
+              setInput(
+                e.target.value
+              )
+            }
+            onKeyDown={
+              handleKeyDown
+            }
+            className="flex-1 bg-transparent text-white placeholder-gray-500 resize-none outline-none max-h-40 overflow-y-auto"
           />
 
-        </div>
-
-        {/* Send Button */}
-        <div className="flex justify-end mt-3">
-
+          {/* Send */}
           <button
-            onClick={handleSubmit}
-            className="bg-linear-to-r from-purple-600 to-violet-500 px-5 py-2 rounded-xl hover:opacity-90 transition"
+            onClick={
+              handleSubmit
+            }
+            disabled={
+              !input.trim()
+            }
+            className="w-10 h-10 rounded-full bg-linear-to-r from-purple-600 to-violet-500 flex items-center justify-center hover:scale-105 transition disabled:opacity-50 disabled:hover:scale-100"
           >
-            Send
+
+            <FiSend size={18} />
+
           </button>
 
         </div>
+
+        {/* Hint */}
+        <p className="text-center text-xs text-gray-500 mt-2">
+
+          Enter ↵ to send · Shift + Enter for new line
+
+        </p>
 
       </div>
 

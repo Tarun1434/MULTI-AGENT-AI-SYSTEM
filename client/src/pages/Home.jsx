@@ -16,6 +16,9 @@ const [currentChatIndex, setCurrentChatIndex] =
 
 const [loading, setLoading] =
   useState(false);
+
+  const [sidebarOpen, setSidebarOpen] =
+  useState(false);
 // =========================================
   // LOAD SAVED CHATS
   // =========================================
@@ -211,58 +214,146 @@ const [loading, setLoading] =
   // =========================================
   // CREATE NEW CHAT
   // =========================================
-  const createNewChat = () => {
+ const createNewChat = () => {
+
+  const currentChat =
+    chatSessions[currentChatIndex];
+
+  // If current chat is empty,
+  // don't create another empty chat
+
+  if (
+    currentChat &&
+    currentChat.messages.length === 0
+  ) {
+    return;
+  }
+
+  const newChat = {
+    title: "New Chat",
+    messages: [],
+  };
+
+  const updatedChats = [
+    ...chatSessions,
+    newChat,
+  ];
+
+  setChatSessions(updatedChats);
+
+  setCurrentChatIndex(
+    updatedChats.length - 1
+  );
+};
+
+ // =========================================
+  // delte chat
+  // =========================================
+  const deleteChat = (indexToDelete) => {
+
+  const updatedChats =
+    chatSessions.filter(
+      (_, index) =>
+        index !== indexToDelete
+    );
+
+  if (
+    updatedChats.length === 0
+  ) {
 
     const newChat = {
       title: "New Chat",
       messages: [],
     };
 
-    const updatedChats = [
-      ...chatSessions,
+    setChatSessions([
       newChat,
-    ];
+    ]);
 
-    setChatSessions(updatedChats);
+    setCurrentChatIndex(0);
 
+    return;
+  }
+
+  setChatSessions(
+    updatedChats
+  );
+
+  if (
+    currentChatIndex >=
+    updatedChats.length
+  ) {
     setCurrentChatIndex(
       updatedChats.length - 1
     );
-  };
+  }
+};
+ return (
+  <div className="bg-[#0f0f0f] text-white h-screen flex overflow-hidden">
 
-  return (
-    <div className="bg-[#0f0f0f] text-white h-screen flex">
+    {/* Mobile Overlay */}
+    {sidebarOpen && (
+      <div
+        className="fixed inset-0 bg-black/60 z-40 md:hidden"
+        onClick={() =>
+          setSidebarOpen(false)
+        }
+      />
+    )}
 
-      <Sidebar
-        chatSessions={chatSessions}
-        currentChatIndex={
-          currentChatIndex
-        }
-        setCurrentChatIndex={
-          setCurrentChatIndex
-        }
-        createNewChat={
-          createNewChat
+    {/* Sidebar */}
+    <div
+      className={`
+      fixed md:static
+      z-50
+      h-screen
+      transition-all duration-300
+      ${sidebarOpen
+        ? "left-0"
+        : "-left-full md:left-0"}
+      `}
+    >
+     <Sidebar
+  chatSessions={chatSessions}
+  currentChatIndex={
+    currentChatIndex
+  }
+  setCurrentChatIndex={
+    setCurrentChatIndex
+  }
+  createNewChat={
+    createNewChat
+  }
+  deleteChat={deleteChat}
+/>
+    </div>
+
+    {/* Main Content */}
+    <div className="flex-1 flex flex-col min-w-0">
+
+      <Navbar
+        toggleSidebar={() =>
+          setSidebarOpen(
+            !sidebarOpen
+          )
         }
       />
 
-      <div className="flex-1 flex flex-col">
+      <ChatWindow
+        messages={
+          currentChat?.messages || []
+        }
+        loading={loading}
+      />
 
-        <Navbar />
-
-       <ChatWindow
-  messages={
-    currentChat?.messages || []
-  }
-  loading={loading}
-/>
-
-        <InputBox onSend={handleSend} />
-
-      </div>
+      <InputBox
+        onSend={handleSend}
+      />
 
     </div>
-  );
+
+  </div>
+);
 }
 
 export default Home;
