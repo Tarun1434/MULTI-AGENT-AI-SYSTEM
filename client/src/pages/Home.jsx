@@ -8,34 +8,15 @@ import LoginModal from "../components/LoginModal";
 
 function Home() {
 
-  const [chatSessions, setChatSessions] =
-    useState([]);
+const [chatSessions, setChatSessions] =
+  useState([]);
 
-  const [currentChatIndex, setCurrentChatIndex] =
-    useState(0);
+const [currentChatIndex, setCurrentChatIndex] =
+  useState(0);
 
-  const [loading, setLoading] =
-    useState(false);
-const [isLoggedIn, setIsLoggedIn] =
-  useState(null);
-
-useEffect(() => {
-
-  const loginStatus =
-    localStorage.getItem(
-      "isLoggedIn"
-    );
-
-  setIsLoggedIn(
-    loginStatus === "true"
-  );
-
-}, []);
-
-if (isLoggedIn === null) {
-  return null;
-}
-  // =========================================
+const [loading, setLoading] =
+  useState(false);
+// =========================================
   // LOAD SAVED CHATS
   // =========================================
   useEffect(() => {
@@ -79,16 +60,6 @@ if (isLoggedIn === null) {
   // =========================================
   // LOGIN CHECK
   // =========================================
-  if (!isLoggedIn) {
-
-    return (
-      <LoginModal
-        setIsLoggedIn={
-          setIsLoggedIn
-        }
-      />
-    );
-  }
 
   // CURRENT CHAT
   const currentChat =
