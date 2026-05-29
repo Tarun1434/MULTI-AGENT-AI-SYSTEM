@@ -26,9 +26,7 @@ function InputBox({ onSend }) {
       !e.shiftKey
     ) {
 
-      e.preventDefault();
-
-      handleSubmit();
+       return ;
     }
   };
 
@@ -120,9 +118,7 @@ function InputBox({ onSend }) {
                 e.target.value
               )
             }
-            onKeyDown={
-              handleKeyDown
-            }
+          
             className="flex-1 bg-transparent text-white placeholder-gray-500 resize-none outline-none max-h-40 overflow-y-auto"
           />
 
@@ -143,12 +139,8 @@ function InputBox({ onSend }) {
 
         </div>
 
-        {/* Hint */}
-        <p className="text-center text-xs text-gray-500 mt-2">
-
-          Enter ↵ to send · Shift + Enter for new line
-
-        </p>
+   
+       
 
       </div>
 
